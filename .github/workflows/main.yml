@@ -6,10 +6,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
 
-      # Paso para limpiar espacio y evitar errores de disco lleno
+    steps:
+      # Actualizado a v4
+      - uses: actions/checkout@v4
+
+      # Limpieza de disco agresiva para evitar errores de espacio
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -18,9 +20,10 @@ jobs:
           dotnet: true
           haskell: true
           large-packages: true
+          docker-images: true
           swap-storage: true
 
-      # Paso de construcción
+      # Construcción
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
@@ -28,9 +31,9 @@ jobs:
           command: buildozer android debug
           buildozer_version: master
 
-      # Paso de subida del APK
+      # Actualizado a v4 (ESTO ARREGLA EL ERROR)
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: package
           path: ${{ steps.buildozer.outputs.filename }}
