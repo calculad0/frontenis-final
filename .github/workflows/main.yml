@@ -5,12 +5,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # CAMBIO 1: Usamos ubuntu-22.04 porque es más estable para Android que la última versión
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Liberar espacio en disco
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -22,20 +22,17 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      # 2. INSTALAR JAVA 17 (¡NUEVO Y CRÍTICO!)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. INSTALAR PYTHON 3.10 (¡NUEVO Y CRÍTICO!)
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 4. Instalar dependencias del sistema
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -57,23 +54,21 @@ jobs:
             automake \
             autoconf \
             libtool \
-            pkg-config
+            libtool-bin \
+            pkg-config \
+            cmake
 
-      # 5. Instalar Buildozer y Cython
       - name: Install Buildozer
         run: |
           pip install --upgrade pip
           pip install --user --upgrade Cython==0.29.33 virtualenv
           pip install --user --upgrade buildozer
 
-      # 6. Compilar (Agregamos más memoria a Java por si acaso)
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin
-          # Truco: Forzar a aceptar licencias y usar Java 17
           yes | buildozer android debug
 
-      # 7. Subir el APK
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
