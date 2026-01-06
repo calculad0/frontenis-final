@@ -8,10 +8,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Actualizado a v4
       - uses: actions/checkout@v4
 
-      # Limpieza de disco agresiva para evitar errores de espacio
+      # 1. Liberar espacio (Vital)
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -23,17 +22,52 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      # Construcción
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: master
+      # 2. Instalar dependencias de Linux (Lo que necesita Kivy para nacer)
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip \
+            build-essential \
+            git \
+            python3 \
+            python3-dev \
+            ffmpeg \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libportmidi-dev \
+            libswscale-dev \
+            libavformat-dev \
+            libavcodec-dev \
+            zlib1g-dev \
+            libgstreamer1.0 \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            libffi-dev \
+            libssl-dev \
+            automake \
+            autoconf \
+            libtool \
+            pkg-config
 
-      # Actualizado a v4 (ESTO ARREGLA EL ERROR)
+      # 3. Instalar Buildozer y Cython
+      - name: Install Buildozer
+        run: |
+          pip3 install --upgrade pip
+          pip3 install --user --upgrade Cython==0.29.33 virtualenv
+          pip3 install --user --upgrade buildozer
+
+      # 4. Compilar (Agregamos "yes" para aceptar licencias automáticamente)
+      - name: Build with Buildozer
+        run: |
+          export PATH=$PATH:~/.local/bin
+          yes | buildozer android debug
+
+      # 5. Subir el APK (Usando la versión v4 que sí funciona)
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
